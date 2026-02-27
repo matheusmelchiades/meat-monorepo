@@ -1,0 +1,44 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: meat-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    environment:
+      MONGO_INITDB_DATABASE: meatdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./meat-server
+    container_name: meat-backend
+    ports:
+      - "3000:3000"
+    environment:
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "3000"
+      MONGO_DB: "meatdb"
+      MONGO_HOST: "mongodb"
+      MONGO_PORT: "27017"
+      MONGO_USER: ""
+      MONGO_PASSWORD: ""
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  frontend:
+    build: ./meat-app
+    container_name: meat-frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
