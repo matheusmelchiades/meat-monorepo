@@ -1,0 +1,1 @@
+export const MEAT_API = 'https://meat-app-server.herokuapp.com'
